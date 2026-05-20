@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>When “Try Again Later” Still Means “You Guessed Right”: OLX Account Takeover | OLX Verification Bug</title>
+  <meta name="description" content="A medium-style editorial security write-up about the OLX verification-code flaw that affected signup, 2FA-style verification, and password reset.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="pages.css">
+</head>
+<body>
+  <main class="medium-article-shell">
+    <article class="medium-article">
+      <header class="medium-header">
+        <h1>
+          <span class="title-line-group title-line-1">When <span class="keep-phrase">“Try Again Later”</span></span>
+          <span class="title-line-group title-line-2">Still Means</span>
+          <span class="title-line-group title-line-3"><span class="keep-phrase">“You Guessed Right”:</span></span>
+          <span class="title-line-group title-line-4"><span class="headline-tail"><span class="inline-brand" aria-label="OLX"><span class="brand-o" data-text="O">O</span><span class="brand-l" data-text="L">L</span><span class="brand-x" data-text="X">X</span></span> account takeover.</span></span>
+        </h1>
+      </header>
+
+      <figure class="medium-hero">
+        <img src="assets/heroimage.png" alt="Stylized OLX account takeover hero graphic showing the verification-code flaw.">
+      </figure>
+
+      <section class="medium-body">
+        <h2>Intro</h2>
+
+        <p>
+          One lazy afternoon back in high school, I was browsing OLX, a Craigslist-like site, on my computer and decided to create an account. To my surprise, the site had changed its login policy and now required a phone number. Since my phone was in another room and, being the lazy person I am, I did not feel like going to get it, I entered my number and started mashing the keyboard on the verify-code page until <strong>a rate limit was triggered</strong>. But I noticed <strong>an unusual message</strong>, so I finally went to get my phone for the story to really begin.
+        </p>
+
+        <p>
+          So far, nothing special. The flow looked normal. I had tried enough wrong codes, the site responded with a “try again later” message, and that should have been the end of the story. But before I went to grab my phone, I noticed something unusual in the way the page responded. It was one of those tiny details that is easy to ignore if you are not paying attention, and impossible to unsee once you are.
+        </p>
+
+        <div class="medium-pullquote">
+          The lockout was there. The weird part was that the page still had opinions about the code I entered.
+        </div>
+
+        <h2>What Was That?</h2>
+
+        <p>
+          I finally went to the other room, grabbed my phone, read the legitimate SMS code, and typed that exact code into the page while the rate limit was still active. The strange message disappeared. Then I entered a wrong code again, and the message came back. I repeated that a few times just to make sure I was not imagining it. Every time the code was wrong, the page showed both the <strong>lockout banner</strong> and the <strong>invalid-code signal</strong>. Every time the code was right, the page kept the lockout banner but dropped the invalid part.
+        </p>
+
+        <p>
+          That was the moment the bug became clear. The site was supposed to be done talking after the lockout kicked in. Instead, it kept <strong>leaking whether the submitted OTP was correct</strong>. The screen still looked blocked. It just stopped looking wrong.
+        </p>
+
+        <figure class="medium-image medium-image-narrow">
+          <img src="assets/1.PNG" alt="Lockout screen showing both the invalid-code warning and the too-many-attempts message.">
+          <figcaption>
+            On a wrong submission, the page showed both the lockout banner and the invalid-code signal.
+          </figcaption>
+        </figure>
+
+        <p>
+          In simpler terms, the flow looked like this:
+        </p>
+
+        <ul>
+          <li>You enter an invalid code: the page says the code is invalid.</li>
+          <li>You enter enough invalid codes: the page says try again later, but still says the code is invalid.</li>
+          <li>You enter the correct code right after that: the page still says try again later, but the invalid-code signal disappears.</li>
+        </ul>
+
+        <p>
+          That meant the lockout state was not neutral at all. It was still giving away the answer.
+        </p>
+
+        <div class="medium-flowchart">
+          <p class="medium-flowchart-title">Where the bug lives</p>
+          <svg class="flowchart-svg" viewBox="0 0 760 560" role="img" aria-label="Flowchart showing where the verification-code bug occurs">
+            <defs>
+              <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill="#6b6b67"></polygon>
+              </marker>
+            </defs>
+
+            <rect x="130" y="20" width="500" height="56" rx="10" fill="#ffffff" stroke="#d9d9d4"/>
+            <text x="380" y="43" text-anchor="middle" font-size="17" font-family="Segoe UI, sans-serif" fill="#1a1a1a" font-weight="600">Verification-code screen</text>
+            <text x="380" y="63" text-anchor="middle" font-size="14" font-family="Segoe UI, sans-serif" fill="#5f5f5b">signup, login verification, or password reset</text>
+
+            <line x1="380" y1="76" x2="380" y2="112" stroke="#6b6b67" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+            <rect x="130" y="122" width="500" height="56" rx="10" fill="#ffffff" stroke="#d9d9d4"/>
+            <text x="380" y="145" text-anchor="middle" font-size="17" font-family="Segoe UI, sans-serif" fill="#1a1a1a" font-weight="600">Wrong code entered a few times</text>
+            <text x="380" y="165" text-anchor="middle" font-size="14" font-family="Segoe UI, sans-serif" fill="#5f5f5b">application switches into lockout</text>
+
+            <line x1="380" y1="178" x2="380" y2="214" stroke="#6b6b67" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+            <rect x="130" y="224" width="500" height="62" rx="10" fill="#ffffff" stroke="#d9d9d4"/>
+            <text x="380" y="247" text-anchor="middle" font-size="17" font-family="Segoe UI, sans-serif" fill="#1a1a1a" font-weight="600">Expected secure behavior</text>
+            <text x="380" y="267" text-anchor="middle" font-size="14" font-family="Segoe UI, sans-serif" fill="#5f5f5b">every blocked submission should look the same</text>
+
+            <text x="380" y="309" text-anchor="middle" font-size="13" font-family="Segoe UI, sans-serif" fill="#7a2f2f" font-weight="700" letter-spacing="1.2">BUT IN REALITY</text>
+
+            <line x1="380" y1="318" x2="380" y2="334" stroke="#6b6b67" stroke-width="1.5"/>
+            <line x1="380" y1="334" x2="220" y2="334" stroke="#6b6b67" stroke-width="1.5"/>
+            <line x1="380" y1="334" x2="540" y2="334" stroke="#6b6b67" stroke-width="1.5"/>
+            <line x1="220" y1="334" x2="220" y2="346" stroke="#6b6b67" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+            <line x1="540" y1="334" x2="540" y2="346" stroke="#6b6b67" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+            <rect x="40" y="356" width="300" height="86" rx="10" fill="#ffffff" stroke="#d9d9d4"/>
+            <text x="190" y="381" text-anchor="middle" font-size="16" font-family="Segoe UI, sans-serif" fill="#1a1a1a" font-weight="600">Wrong code during lockout</text>
+            <text x="190" y="404" text-anchor="middle" font-size="14" font-family="Segoe UI, sans-serif" fill="#5f5f5b">lockout message stays visible</text>
+            <text x="190" y="423" text-anchor="middle" font-size="14" font-family="Segoe UI, sans-serif" fill="#5f5f5b">invalid-code signal stays visible</text>
+
+            <rect x="420" y="356" width="300" height="86" rx="10" fill="#ffffff" stroke="#d9d9d4"/>
+            <text x="570" y="381" text-anchor="middle" font-size="16" font-family="Segoe UI, sans-serif" fill="#1a1a1a" font-weight="600">Correct code during lockout</text>
+            <text x="570" y="404" text-anchor="middle" font-size="14" font-family="Segoe UI, sans-serif" fill="#5f5f5b">lockout message stays visible</text>
+            <text x="570" y="423" text-anchor="middle" font-size="14" font-family="Segoe UI, sans-serif" fill="#5f5f5b">invalid-code signal disappears</text>
+
+            <line x1="190" y1="442" x2="190" y2="470" stroke="#6b6b67" stroke-width="1.5"/>
+            <line x1="570" y1="442" x2="570" y2="470" stroke="#6b6b67" stroke-width="1.5"/>
+            <line x1="190" y1="470" x2="570" y2="470" stroke="#6b6b67" stroke-width="1.5"/>
+            <line x1="380" y1="470" x2="380" y2="494" stroke="#6b6b67" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+            <rect x="110" y="504" width="540" height="42" rx="10" fill="#f3f3ef" stroke="#d9d9d4"/>
+            <text x="380" y="529" text-anchor="middle" font-size="15" font-family="Segoe UI, sans-serif" fill="#1a1a1a" font-weight="600">Bug: locked state still leaks correctness</text>
+          </svg>
+        </div>
+
+        <p>
+          The real issue was not one screen. It was the <strong>verification-code logic itself</strong>, reused across <strong>signup, phone verification, 2FA-style checks, password reset</strong>, and the rest of the account flow.
+        </p>
+
+        <figure class="medium-image">
+          <img src="assets/olx1en.PNG" alt="Side-by-side source comparison labeled correct and incorrect.">
+          <figcaption>
+            The cleaner proof lives in the response difference: wrong codes keep the invalid marker, while the correct code removes it even during lockout.
+          </figcaption>
+        </figure>
+
+        <h2>Why the bug was exploitable: code expiry? not really.</h2>
+
+        <p>
+          There were really <strong>two flaws</strong> here, and they worked together perfectly. The first flaw was that I could still tell whether the submitted code was right or wrong even after the rate limit was active. The second flaw was that the verification code stayed valid long enough for that leaked signal to matter. The “try again later” state lasted about <strong>seven minutes</strong>, which was more than enough time to use the leak.
+        </p>
+
+        <p>
+          On its own, a correctness signal is already bad. But a correctness signal plus time turns into an attack path. A lockout is supposed to make the application boring. Once the site decides you have tried too many times, every blocked response should look equally useless. Here, it didn’t. The site kept answering the only question that mattered.
+        </p>
+
+        <p>
+          That becomes much more severe once you stop thinking only about signup or one phone-verification page and start thinking about every place the same code flow might be reused. If that exact behavior is sitting behind login verification, 2FA-style prompts, password reset, and account recovery, then you are no longer looking at one quirky screen. You are looking at a system-wide verification flaw.
+        </p>
+
+        <div class="medium-aside">
+          A real lockout does not just block attempts. It stops revealing success and failure information.
+        </div>
+
+        <p>
+          This kind of leak is not unique to one product either. Years later, I came across a James Kettle video showing the same basic idea: a locked state is supposed to stop being informative, but the application still reacts differently to a valid value and an invalid one.
+        </p>
+
+        <figure class="medium-image">
+          <img src="assets/TheSameBugCanBeSeenInJamesKattelVid.PNG" alt="Screenshot from a James Kettle talk showing invalid password versus valid password behavior during account lockout.">
+          <figcaption>
+            A similar lockout leak appears in a James Kettle talk: the blocked state still behaves differently for a valid input than for an invalid one.
+          </figcaption>
+        </figure>
+
+        <h2>Exploiting The Two Flaws</h2>
+
+        <p>
+          Once the behavior was clear, the rest was straightforward. The code space was only <strong>four digits</strong>, which means <strong>10,000 combinations</strong>. That fits comfortably inside a <strong>seven-minute</strong> window. <strong>Burp Intruder</strong> was enough. The setup was deliberately simple: send the four-digit values in random order, then grep for the word “invalid” and wait for the one response that no longer matched it.
+        </p>
+
+        <p>
+          The important detail is that the lockout did <strong>not</strong> stop the backend from evaluating the code. It only stopped the application from completing the flow normally. The server still checked each guess, and the response still changed when the guess was right. So the attack path was simple: trigger the lockout, spray guesses while the page is supposedly blocked, identify the one value that makes the invalid marker disappear, then wait out the timer or use a fresh session and submit only that winning code.
+        </p>
+
+        <p>
+          If you have never used Burp Intruder before, the screenshots below are just showing the basic loop: pick the verification-code field, tell Burp what kind of payloads to try, tell it what response marker to watch for, then look for the request that breaks the normal pattern.
+        </p>
+
+        <section class="burp-gallery" aria-label="Burp Intruder gallery">
+          <p class="burp-gallery-label">Burp setup gallery</p>
+
+          <div class="burp-carousel" data-carousel>
+            <button class="burp-carousel-arrow burp-carousel-prev" type="button" aria-label="Previous Burp image" data-carousel-prev>&larr;</button>
+
+            <div class="burp-carousel-viewport">
+              <figure class="burp-carousel-slide is-active" data-carousel-slide>
+                <img src="assets/7redacted.png" alt="Burp Intruder payload position placed inside the verification code parameter.">
+                <figcaption>
+                  <strong>1. Payload position</strong>
+                  Burp Intruder aimed at the verification-code field with a single payload position.
+                </figcaption>
+              </figure>
+
+              <figure class="burp-carousel-slide" data-carousel-slide>
+                <img src="assets/8.PNG" alt="Burp Intruder payload set configuration showing the brute-force options for the verification code.">
+                <figcaption>
+                  <strong>2. Payload set</strong>
+                  This is the part where you tell Burp what values to generate and how to step through that code space.
+                </figcaption>
+              </figure>
+
+              <figure class="burp-carousel-slide" data-carousel-slide>
+                <img src="assets/6.PNG" alt="Burp Intruder grep match configured to flag responses containing the word invalid.">
+                <figcaption>
+                  <strong>3. Grep match</strong>
+                  Watch for the word <em>invalid</em> so the interesting response stands out immediately.
+                </figcaption>
+              </figure>
+
+              <figure class="burp-carousel-slide" data-carousel-slide>
+                <img src="assets/5.PNG" alt="Burp Intruder results showing one request without the invalid marker while the others still match it.">
+                <figcaption>
+                  <strong>4. Results view</strong>
+                  Once the attack runs, the useful row is the one that stops matching the invalid-code marker while the others still do.
+                </figcaption>
+              </figure>
+            </div>
+
+            <button class="burp-carousel-arrow burp-carousel-next" type="button" aria-label="Next Burp image" data-carousel-next>&rarr;</button>
+          </div>
+
+          <div class="burp-carousel-meta">
+            <span class="burp-carousel-counter" data-carousel-counter>1 / 4</span>
+          </div>
+        </section>
+
+        <p>
+          That is what made the bug dangerous. The code did not need to be exposed directly. The application itself kept answering <strong>yes or no after each guess</strong>, even while pretending it was no longer accepting guesses in a meaningful way. With a <strong>four-digit</strong> space and a validity window that outlived the lockout, the rate limit stopped being a defense and turned into <strong>a cosmetic delay</strong>.
+        </p>
+
+        <p>
+          That same pattern matters even more in <strong>password reset</strong>. At that point, you are not dealing with an annoying verification bypass on your own account creation flow. You are dealing with a system that can help an attacker confirm the right reset code for someone else’s account. And because the same verification behavior was reused across the broader account system, password reset was not some isolated bonus impact. It was <strong>part of the same broken design</strong>.
+        </p>
+
+        <h2>Impact: Full account takeover with persistence</h2>
+
+        <p>
+          This is the part the earlier framing understated. The bug was not limited to one narrow flow. It affected the verification logic itself, which means it could show up anywhere OLX reused that code screen: <strong>signup, login verification, 2FA-style checks, password reset, account recovery</strong>, what you name it. A weird signup bug is one thing. A shared verification flaw across the account system is a very different class of problem.
+        </p>
+
+        <p>
+          In other words, the attacker does not merely learn something useful about one OTP prompt. They can use the same leaked signal on the reset path, <strong>set a new password</strong>, and <strong>take over the account</strong> through a channel that the application itself treats as legitimate recovery. Once the same bug sits behind both verification and recovery, “it leaks whether the code was right” is no longer the story. <strong>Account takeover</strong> is.
+        </p>
+
+        <p>
+          The ugly part did not stop there. Once the attacker got in, there was <strong>no clean way to kick them back out</strong>. <strong>OLX lacked session revocation on password change</strong>, so changing the password did not reliably kill the attacker's existing access. Even after the victim rotated the password, the attacker could stay inside the account, which turned the bug from plain account takeover into <strong>account takeover with persistence</strong>.
+        </p>
+
+        <p>
+          The regional OLX screenshot also points toward a shared authentication stack across several Middle Eastern properties. That expands the scope from “one odd site bug” to “a reusable verification mistake across a platform family.” It affected almost all of OLX’s Middle Eastern domains, and the surrounding evidence points toward Egypt, Jordan, the UAE, Bahrain, Saudi Arabia, Kuwait, Oman, Qatar, and Lebanon. Even without overstating anything, that is a serious blast radius.
+        </p>
+
+        <figure class="medium-image">
+          <img src="assets/3.png" alt="List of OLX countries across the Middle East.">
+          <figcaption>
+            The surrounding notes suggest the issue was tied to a broader shared stack rather than one isolated market.
+          </figcaption>
+        </figure>
+
+        <p>
+          I did try to report it. The report went nowhere useful. I was still in high school, did not have the time to turn it into a polished video or full proof-of-concept, and the security team was <strong>so incompetent that they did not even know how to use Burp</strong>, so the whole process just died. The bug stayed around for <strong>roughly two more years</strong> and only really disappeared when OLX went through a full rebrand. That part matters too. A real bug does not become less real just because the report handling is bad.
+        </p>
+
+        <h2>Final Words</h2>
+
+        <p>
+          What I still like about this bug is how small the clue was compared with how big the consequence could become. There was no giant missing control here. The site had a rate limit. It had a warning banner. It looked secure enough from a distance. The whole problem came from one detail surviving into one state where it should not have survived. But because that detail lived inside a shared verification flow used across the account system, the mistake carried far more weight than the screen first suggested.
+        </p>
+
+        <p>
+          That is why this kind of write-up matters. It is a reminder that bug bounty is often less about heroic complexity and more about noticing unintended behavior. A page says “try again later,” but the application is still talking. Once you catch that, the rest of the story writes itself.
+        </p>
+
+        <div class="medium-pullquote">
+          Bug bounty is the art of noticing unintended behavior.
+        </div>
+
+        <p>
+          If there is one useful habit to keep from this, it is a simple one: never stop testing at the exact moment a protection first appears. Sometimes that is where the real bug starts. The dead-simple pattern still holds up: wrong code, rate limit, then correct code. If the page behaves differently on that last step, keep digging.
+        </p>
+      </section>
+    </article>
+  </main>
+  <script>
+    document.querySelectorAll("[data-carousel]").forEach((carousel) => {
+      const slides = Array.from(carousel.querySelectorAll("[data-carousel-slide]"));
+      const prev = carousel.querySelector("[data-carousel-prev]");
+      const next = carousel.querySelector("[data-carousel-next]");
+      const viewport = carousel.querySelector(".burp-carousel-viewport");
+      const counter = carousel.parentElement.querySelector("[data-carousel-counter]");
+      let index = slides.findIndex((slide) => slide.classList.contains("is-active"));
+      if (index < 0) index = 0;
+
+      const syncHeight = () => {
+        const activeSlide = slides[index];
+        if (viewport && activeSlide) {
+          viewport.style.height = `${activeSlide.offsetHeight}px`;
+        }
+      };
+
+      const render = () => {
+        slides.forEach((slide, i) => {
+          slide.classList.toggle("is-active", i === index);
+        });
+        if (counter) {
+          counter.textContent = `${index + 1} / ${slides.length}`;
+        }
+        requestAnimationFrame(syncHeight);
+      };
+
+      prev?.addEventListener("click", () => {
+        index = (index - 1 + slides.length) % slides.length;
+        render();
+      });
+
+      next?.addEventListener("click", () => {
+        index = (index + 1) % slides.length;
+        render();
+      });
+
+      window.addEventListener("resize", syncHeight);
+      slides.forEach((slide) => {
+        const image = slide.querySelector("img");
+        image?.addEventListener("load", syncHeight);
+      });
+
+      render();
+    });
+  </script>
+</body>
+</html>
