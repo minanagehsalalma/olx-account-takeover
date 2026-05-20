@@ -1,26 +1,30 @@
 # When “Try Again Later” Still Means “You Guessed Right”
 
-Historical security write-up about an OLX account-takeover bug caused by a verification-code flow that still leaked the correct code during lockout.
+<p align="center">
+  <img src="assets/og-preview.jpg" alt="OLX account takeover write-up preview" width="900">
+</p>
 
-## Live Page
+<p align="center">
+  A polished security write-up about an OLX verification-code flaw that still leaked the correct code during lockout and led to account takeover.
+</p>
 
-- [Article](index.html)
+<p align="center">
+  <a href="https://minanagehsalalma.github.io/olx-account-takeover/">Read the article</a>
+</p>
+
+## What This Repo Is
+
+This repository contains a single GitHub Pages write-up about an OLX verification-code flow that kept revealing whether a submitted code was correct even after the application switched into a lockout state.
+
+That behavior was reused across sensitive account flows, including password reset, which raised the impact to full account takeover. The platform also lacked session revocation on password change, which meant access could persist even after the victim rotated their password.
 
 ## Repo Contents
 
-- `index.html` — the published write-up
-- `pages.css` — styling for the article
+- `index.html` — the published article
+- `pages.css` — article styling
 - `assets/` — only the images used by the article
 
-## Summary
+## Live Site
 
-The core issue was simple:
-
-> the application said “try again later,” but it still reacted differently to the correct code than to a wrong one
-
-That leak was not limited to one screen. The same verification behavior was reused across account flows including password reset, which raised the impact to full account takeover. The platform also lacked session revocation on password change, which meant access could persist even after the victim rotated their password.
-
-## GitHub Pages
-
-This repository is meant to be published directly with GitHub Pages from the root of the default branch.
+- https://minanagehsalalma.github.io/olx-account-takeover/
 
