@@ -491,6 +491,205 @@ li {
   overflow-x: auto;
 }
 
+.bug-sim {
+  margin: 2rem 0;
+  padding: 1.25rem 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.bug-sim-label {
+  margin: 0 0 0.4rem;
+  color: var(--muted);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bug-sim h3 {
+  margin: 0 0 0.45rem;
+}
+
+.bug-sim-intro {
+  margin: 0 0 1.1rem;
+  color: #3b3b39;
+  font-size: 1rem;
+}
+
+.bug-sim-app {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(18rem, 0.95fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.bug-sim-screen,
+.bug-sim-controls {
+  padding: 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fbfbf9;
+}
+
+.bug-sim-screen-label {
+  margin: 0 0 0.3rem;
+  color: var(--muted);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.bug-sim-screen-title {
+  margin: 0;
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.bug-sim-digits {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 1.1rem;
+}
+
+.bug-sim-digits span {
+  aspect-ratio: 1 / 1.18;
+  border: 1px solid #d3d5db;
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(243, 244, 247, 0.88));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.bug-sim-banners {
+  display: grid;
+  gap: 0.65rem;
+  min-height: 8.4rem;
+  align-content: start;
+}
+
+.bug-sim-banner {
+  margin: 0;
+  padding: 0.8rem 0.95rem;
+  border-radius: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.97rem;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.bug-sim-banner-invalid {
+  background: #fff3f2;
+  border: 1px solid #efc7c2;
+  color: #9f2f24;
+}
+
+.bug-sim-banner-lockout {
+  background: #fff4d9;
+  border: 1px solid #ecd29b;
+  color: #8b5b00;
+}
+
+.bug-sim-banner-success {
+  background: #edf8ef;
+  border: 1px solid #c8e2cd;
+  color: #1f6b35;
+}
+
+.bug-sim-phone {
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.94rem;
+}
+
+.bug-sim-input-label {
+  display: block;
+  margin-bottom: 0.55rem;
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+
+.bug-sim-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+}
+
+.bug-sim-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid #cfd2d8;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
+  font-size: 1.05rem;
+}
+
+.bug-sim-input:focus {
+  outline: 0;
+  border-color: #6f8ddf;
+  box-shadow: 0 0 0 3px rgba(95, 128, 214, 0.14);
+}
+
+.bug-sim-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 0.85rem;
+}
+
+.bug-sim-button {
+  min-height: 42px;
+  padding: 0.7rem 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.93rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.bug-sim-button:hover {
+  transform: translateY(-1px);
+  border-color: #babdc5;
+}
+
+.bug-sim-button-primary {
+  border-color: #1f1f1d;
+  background: #1f1f1d;
+  color: #fff;
+}
+
+.bug-sim-button-primary:hover {
+  border-color: #2a2a27;
+  background: #2a2a27;
+}
+
+.bug-sim-hint,
+.bug-sim-attempts {
+  margin: 0.9rem 0 0;
+  color: var(--muted);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
 .medium-flowchart-title {
   margin: 0 0 0.9rem;
   color: var(--ink);
@@ -724,6 +923,25 @@ li {
 
   .medium-image-narrow img {
     max-width: 100%;
+  }
+
+  .bug-sim-app,
+  .bug-sim-input-row {
+    grid-template-columns: 1fr;
+  }
+
+  .bug-sim-screen,
+  .bug-sim-controls {
+    padding: 1rem;
+  }
+
+  .bug-sim-banners {
+    min-height: 0;
+  }
+
+  .bug-sim-button {
+    width: 100%;
+    justify-content: center;
   }
 
   .medium-flowchart {

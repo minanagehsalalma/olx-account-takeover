@@ -84,6 +84,54 @@
           That meant the lockout state was not neutral at all. It was still giving away the answer.
         </p>
 
+        <section class="bug-sim" aria-labelledby="bug-sim-title">
+          <p class="bug-sim-label">Play it</p>
+          <h3 id="bug-sim-title">Tiny lockout simulator</h3>
+          <p class="bug-sim-intro">
+            Three wrong tries trigger the lockout. Then hit <strong>Go get phone</strong> and submit the real code. The broken part is the same one from the story: the lockout stays, but the invalid-code signal disappears.
+          </p>
+
+          <div class="bug-sim-app" data-bug-sim data-correct-code="1337">
+            <div class="bug-sim-screen">
+              <p class="bug-sim-screen-label">Totally serious verification lab</p>
+              <p class="bug-sim-screen-title">SMS Phone Verification</p>
+
+              <div class="bug-sim-digits" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+
+              <div class="bug-sim-banners" aria-live="polite">
+                <p class="bug-sim-banner bug-sim-banner-invalid" data-sim-invalid hidden>Incorrect code</p>
+                <p class="bug-sim-banner bug-sim-banner-lockout" data-sim-lockout hidden>Too many attempts. Please try again later.</p>
+                <p class="bug-sim-banner bug-sim-banner-success" data-sim-success hidden>Correct code before lockout. Boring, secure-looking outcome.</p>
+              </div>
+
+              <p class="bug-sim-phone" data-sim-phone>Phone status: still in the other room.</p>
+            </div>
+
+            <div class="bug-sim-controls">
+              <label class="bug-sim-input-label" for="bug-sim-code">Enter a 4-digit code</label>
+
+              <div class="bug-sim-input-row">
+                <input id="bug-sim-code" class="bug-sim-input" type="text" inputmode="numeric" maxlength="4" placeholder="0000" data-sim-input>
+                <button class="bug-sim-button bug-sim-button-primary" type="button" data-sim-submit>Submit</button>
+              </div>
+
+              <div class="bug-sim-actions">
+                <button class="bug-sim-button" type="button" data-sim-mash>Mash keyboard</button>
+                <button class="bug-sim-button" type="button" data-sim-phone-btn>Go get phone</button>
+                <button class="bug-sim-button" type="button" data-sim-reset>Reset</button>
+              </div>
+
+              <p class="bug-sim-hint" data-sim-hint>Goal: hit the lockout first, then come back with the real code.</p>
+              <p class="bug-sim-attempts">Wrong tries used: <span data-sim-attempts>0</span> / 3</p>
+            </div>
+          </div>
+        </section>
+
         <div class="medium-flowchart">
           <p class="medium-flowchart-title">Where the bug lives</p>
           <svg class="flowchart-svg" viewBox="0 0 760 560" role="img" aria-label="Flowchart showing where the verification-code bug occurs">
@@ -297,6 +345,147 @@
     </article>
   </main>
   <script>
+    document.querySelectorAll("[data-bug-sim]").forEach((simulator) => {
+      const correctCode = simulator.dataset.correctCode || "1337";
+      const input = simulator.querySelector("[data-sim-input]");
+      const invalidBanner = simulator.querySelector("[data-sim-invalid]");
+      const lockoutBanner = simulator.querySelector("[data-sim-lockout]");
+      const successBanner = simulator.querySelector("[data-sim-success]");
+      const phoneText = simulator.querySelector("[data-sim-phone]");
+      const hint = simulator.querySelector("[data-sim-hint]");
+      const attempts = simulator.querySelector("[data-sim-attempts]");
+      const submit = simulator.querySelector("[data-sim-submit]");
+      const mash = simulator.querySelector("[data-sim-mash]");
+      const phoneButton = simulator.querySelector("[data-sim-phone-btn]");
+      const reset = simulator.querySelector("[data-sim-reset]");
+
+      const state = {
+        wrongAttempts: 0,
+        locked: false,
+        phoneFetched: false
+      };
+
+      const show = (node, visible) => {
+        if (!node) return;
+        node.hidden = !visible;
+      };
+
+      const updateScreen = ({ invalid = false, lockout = false, success = false, hintText } = {}) => {
+        show(invalidBanner, invalid);
+        show(lockoutBanner, lockout);
+        show(successBanner, success);
+        if (attempts) {
+          attempts.textContent = `${state.wrongAttempts}`;
+        }
+        if (phoneText) {
+          phoneText.textContent = state.phoneFetched
+            ? `Phone status: the SMS finally says ${correctCode}.`
+            : "Phone status: still in the other room.";
+        }
+        if (hint && hintText) {
+          hint.textContent = hintText;
+        }
+      };
+
+      const randomWrongCode = () => {
+        let candidate = correctCode;
+        while (candidate === correctCode) {
+          candidate = `${Math.floor(Math.random() * 10000)}`.padStart(4, "0");
+        }
+        return candidate;
+      };
+
+      const resetState = () => {
+        state.wrongAttempts = 0;
+        state.locked = false;
+        state.phoneFetched = false;
+        if (input) {
+          input.value = "";
+        }
+        updateScreen({
+          hintText: "Goal: hit the lockout first, then come back with the real code."
+        });
+      };
+
+      const submitCode = () => {
+        const value = input?.value.trim() || "";
+        if (!/^\d{4}$/.test(value)) {
+          updateScreen({
+            hintText: "Toy app rules: four digits only. Fake security still likes clean formatting."
+          });
+          return;
+        }
+
+        if (state.locked) {
+          if (value === correctCode) {
+            updateScreen({
+              lockout: true,
+              hintText: "Bug reproduced: the lockout stays, but the invalid-code signal vanishes."
+            });
+          } else {
+            updateScreen({
+              invalid: true,
+              lockout: true,
+              hintText: "Still locked. Still judging. Still leaking."
+            });
+          }
+          return;
+        }
+
+        if (value === correctCode) {
+          updateScreen({
+            success: true,
+            hintText: "Correct code before lockout just finishes the flow. Nothing interesting there."
+          });
+          return;
+        }
+
+        state.wrongAttempts += 1;
+        if (state.wrongAttempts >= 3) {
+          state.locked = true;
+          updateScreen({
+            invalid: true,
+            lockout: true,
+            hintText: "Lockout triggered. Now go get the phone and try the real code."
+          });
+          return;
+        }
+
+        updateScreen({
+          invalid: true,
+          hintText: "Wrong code. Keep going until the fake app gets dramatic."
+        });
+      };
+
+      submit?.addEventListener("click", submitCode);
+      mash?.addEventListener("click", () => {
+        if (input) {
+          input.value = randomWrongCode();
+        }
+        submitCode();
+      });
+      phoneButton?.addEventListener("click", () => {
+        state.phoneFetched = true;
+        updateScreen({
+          invalid: !invalidBanner?.hidden,
+          lockout: !lockoutBanner?.hidden,
+          success: !successBanner?.hidden,
+          hintText: `The SMS says ${correctCode}. Conveniently cinematic.`
+        });
+      });
+      reset?.addEventListener("click", resetState);
+      input?.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          submitCode();
+        }
+      });
+      input?.addEventListener("input", () => {
+        input.value = input.value.replace(/\D/g, "").slice(0, 4);
+      });
+
+      resetState();
+    });
+
     document.querySelectorAll("[data-carousel]").forEach((carousel) => {
       const slides = Array.from(carousel.querySelectorAll("[data-carousel-slide]"));
       const prev = carousel.querySelector("[data-carousel-prev]");
