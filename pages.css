@@ -522,6 +522,7 @@ li {
   grid-template-columns: minmax(0, 1.05fr) minmax(18rem, 0.95fr);
   gap: 1rem;
   align-items: stretch;
+  animation: bugSimRise 620ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .bug-sim-screen,
@@ -530,6 +531,11 @@ li {
   border: 1px solid var(--line);
   border-radius: 16px;
   background: #fbfbf9;
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease,
+    background-color 220ms ease;
 }
 
 .bug-sim-screen-label {
@@ -564,6 +570,11 @@ li {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(243, 244, 247, 0.88));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
 }
 
 .bug-sim-banners {
@@ -581,6 +592,30 @@ li {
   font-size: 0.97rem;
   line-height: 1.4;
   font-weight: 600;
+  opacity: 0;
+  transform: translateY(8px) scale(0.985);
+  max-height: 0;
+  overflow: hidden;
+  transition:
+    opacity 220ms ease,
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    max-height 220ms ease,
+    padding-top 220ms ease,
+    padding-bottom 220ms ease,
+    margin 220ms ease;
+}
+
+.bug-sim-banner:not(.is-visible) {
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
+}
+
+.bug-sim-banner.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  max-height: 4.75rem;
 }
 
 .bug-sim-banner-invalid {
@@ -606,6 +641,7 @@ li {
   color: var(--muted);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 0.94rem;
+  transition: color 220ms ease, transform 220ms ease;
 }
 
 .bug-sim-input-label {
@@ -633,6 +669,10 @@ li {
   color: var(--ink);
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
   font-size: 1.05rem;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
 .bug-sim-input:focus {
@@ -670,6 +710,10 @@ li {
   border-color: #babdc5;
 }
 
+.bug-sim-button:active {
+  transform: translateY(1px) scale(0.985);
+}
+
 .bug-sim-button-primary {
   border-color: #1f1f1d;
   background: #1f1f1d;
@@ -688,6 +732,196 @@ li {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 0.94rem;
   line-height: 1.5;
+}
+
+.bug-sim-attempts span {
+  display: inline-block;
+  min-width: 1ch;
+}
+
+.bug-sim-app.is-judging .bug-sim-screen {
+  transform: translateX(-2px);
+}
+
+.bug-sim-app.is-judging .bug-sim-digits span {
+  border-color: #e6b0a8;
+  box-shadow: 0 0 0 2px rgba(223, 120, 104, 0.12);
+  animation: bugDigitJitter 320ms ease;
+}
+
+.bug-sim-app.is-locking .bug-sim-screen,
+.bug-sim-app.is-locking .bug-sim-controls {
+  border-color: #e1c278;
+  box-shadow: 0 0 0 3px rgba(218, 179, 87, 0.12);
+}
+
+.bug-sim-app.is-locking .bug-sim-banner-lockout.is-visible {
+  animation: bugLockoutPulse 780ms ease;
+}
+
+.bug-sim-app.is-revealing .bug-sim-screen,
+.bug-sim-app.is-revealing .bug-sim-controls {
+  border-color: #9fd8b0;
+  box-shadow: 0 0 0 3px rgba(102, 181, 127, 0.12);
+}
+
+.bug-sim-app.is-revealing .bug-sim-screen {
+  animation: bugRevealFlash 760ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bug-sim-app.is-revealing .bug-sim-digits span {
+  border-color: #afd8ba;
+  background:
+    linear-gradient(180deg, rgba(243, 255, 246, 0.98), rgba(228, 247, 234, 0.98));
+}
+
+.bug-sim-app.is-clean-win .bug-sim-screen,
+.bug-sim-app.is-clean-win .bug-sim-controls {
+  border-color: #b9d9c1;
+  box-shadow: 0 0 0 3px rgba(113, 174, 129, 0.1);
+}
+
+.bug-sim-phone.is-got-it {
+  color: #1f6b35;
+  animation: bugPhonePop 520ms ease;
+}
+
+.bug-sim-input.is-wrong {
+  border-color: #d98f84;
+  box-shadow: 0 0 0 3px rgba(217, 143, 132, 0.12);
+  animation: bugInputShake 360ms ease;
+}
+
+.bug-sim-attempts span.is-bump {
+  animation: bugCountBump 360ms ease;
+}
+
+@keyframes bugSimRise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bugDigitJitter {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-2px);
+  }
+
+  50% {
+    transform: translateX(2px);
+  }
+
+  75% {
+    transform: translateX(-1px);
+  }
+}
+
+@keyframes bugInputShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(-4px);
+  }
+
+  40% {
+    transform: translateX(4px);
+  }
+
+  60% {
+    transform: translateX(-3px);
+  }
+
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes bugLockoutPulse {
+  0% {
+    transform: scale(0.985);
+  }
+
+  40% {
+    transform: scale(1.015);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bugRevealFlash {
+  0% {
+    transform: translateY(0) scale(1);
+    background: #fbfbf9;
+  }
+
+  18% {
+    transform: translateY(-2px) scale(1.01);
+    background: #f3fbf4;
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    background: #fbfbf9;
+  }
+}
+
+@keyframes bugPhonePop {
+  0% {
+    transform: translateY(0);
+  }
+
+  35% {
+    transform: translateY(-2px) scale(1.01);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes bugCountBump {
+  0% {
+    transform: scale(1);
+  }
+
+  45% {
+    transform: scale(1.18);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bug-sim-app,
+  .bug-sim-screen,
+  .bug-sim-controls,
+  .bug-sim-digits span,
+  .bug-sim-banner,
+  .bug-sim-phone,
+  .bug-sim-input,
+  .bug-sim-button,
+  .bug-sim-attempts span {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 .medium-flowchart-title {

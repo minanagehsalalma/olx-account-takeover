@@ -358,6 +358,7 @@
       const mash = simulator.querySelector("[data-sim-mash]");
       const phoneButton = simulator.querySelector("[data-sim-phone-btn]");
       const reset = simulator.querySelector("[data-sim-reset]");
+      const motionTimers = new WeakMap();
 
       const state = {
         wrongAttempts: 0,
@@ -367,7 +368,34 @@
 
       const show = (node, visible) => {
         if (!node) return;
-        node.hidden = !visible;
+        const existingTimer = motionTimers.get(node);
+        if (existingTimer) {
+          window.clearTimeout(existingTimer);
+        }
+
+        if (visible) {
+          node.hidden = false;
+          requestAnimationFrame(() => {
+            node.classList.add("is-visible");
+          });
+          return;
+        }
+
+        node.classList.remove("is-visible");
+        const timer = window.setTimeout(() => {
+          node.hidden = true;
+        }, 220);
+        motionTimers.set(node, timer);
+      };
+
+      const pulseClass = (node, className, duration = 520) => {
+        if (!node) return;
+        node.classList.remove(className);
+        void node.offsetWidth;
+        node.classList.add(className);
+        window.setTimeout(() => {
+          node.classList.remove(className);
+        }, duration);
       };
 
       const updateScreen = ({ invalid = false, lockout = false, success = false, hintText } = {}) => {
@@ -401,7 +429,11 @@
         state.phoneFetched = false;
         if (input) {
           input.value = "";
+          input.classList.remove("is-wrong");
         }
+        simulator.classList.remove("is-judging", "is-locking", "is-revealing", "is-clean-win");
+        phoneText?.classList.remove("is-got-it");
+        attempts?.classList.remove("is-bump");
         updateScreen({
           hintText: "Goal: hit the lockout first, then come back with the real code."
         });
@@ -410,6 +442,7 @@
       const submitCode = () => {
         const value = input?.value.trim() || "";
         if (!/^\d{4}$/.test(value)) {
+          pulseClass(input, "is-wrong", 360);
           updateScreen({
             hintText: "Toy app rules: four digits only. Fake security still likes clean formatting."
           });
@@ -418,11 +451,14 @@
 
         if (state.locked) {
           if (value === correctCode) {
+            pulseClass(simulator, "is-revealing", 760);
             updateScreen({
               lockout: true,
               hintText: "Bug reproduced: the lockout stays, but the invalid-code signal vanishes."
             });
           } else {
+            pulseClass(simulator, "is-judging", 420);
+            pulseClass(input, "is-wrong", 360);
             updateScreen({
               invalid: true,
               lockout: true,
@@ -433,6 +469,7 @@
         }
 
         if (value === correctCode) {
+          pulseClass(simulator, "is-clean-win", 640);
           updateScreen({
             success: true,
             hintText: "Correct code before lockout just finishes the flow. Nothing interesting there."
@@ -441,8 +478,11 @@
         }
 
         state.wrongAttempts += 1;
+        pulseClass(attempts, "is-bump", 360);
         if (state.wrongAttempts >= 3) {
           state.locked = true;
+          pulseClass(simulator, "is-locking", 820);
+          pulseClass(input, "is-wrong", 360);
           updateScreen({
             invalid: true,
             lockout: true,
@@ -451,6 +491,8 @@
           return;
         }
 
+        pulseClass(simulator, "is-judging", 420);
+        pulseClass(input, "is-wrong", 360);
         updateScreen({
           invalid: true,
           hintText: "Wrong code. Keep going until the fake app gets dramatic."
@@ -466,6 +508,7 @@
       });
       phoneButton?.addEventListener("click", () => {
         state.phoneFetched = true;
+        pulseClass(phoneText, "is-got-it", 520);
         updateScreen({
           invalid: !invalidBanner?.hidden,
           lockout: !lockoutBanner?.hidden,
