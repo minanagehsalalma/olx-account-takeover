@@ -957,6 +957,31 @@ li {
   font-weight: 700;
 }
 
+.medium-contact-note {
+  margin: 2.25rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.medium-contact-note a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.14em;
+}
+
+.medium-contact-note-top {
+  margin: 0 0 1.75rem;
+}
+
+.medium-contact-note a:hover {
+  color: var(--accent);
+}
+
 .burp-gallery {
   margin: 2rem 0;
   padding: 1rem 0 0;
